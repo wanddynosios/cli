@@ -17,10 +17,7 @@ import (
 // When a field is a slice or an array, a single list hint "[]" may be specified in the JSONry path so that the array
 // is created at the correct position in the JSON output.
 //
-// If a type implements the json.Marshaler interface, then the MarshalJSON() method will be called.
-//
-// If a type implements the jsonry.Omissible interface, then the OmitJSONry() method will be used to
-// to determine whether or not to marshal the field, overriding any `,omitempty` tags.
+// If a field implements the json.Marshaler interface, then the MarshalJSON() method will be called.
 //
 // The field type can be string, bool, int*, uint*, float*, map, slice, array or struct. JSONry is recursive.
 func Marshal(in interface{}) ([]byte, error) {
@@ -47,8 +44,7 @@ func marshalStruct(ctx context.Context, in reflect.Value) (map[string]interface{
 
 		if public(f) {
 			p := path.ComputePath(f)
-
-			if shouldMarshal(p, in.Field(i)) {
+			if !p.OmitEmpty || !in.Field(i).IsZero() {
 				r, err := marshal(ctx.WithField(f.Name, f.Type), in.Field(i))
 				if err != nil {
 					return nil, err
@@ -88,30 +84,24 @@ func marshal(ctx context.Context, in reflect.Value) (r interface{}, err error) {
 	return
 }
 
-func marshalList(ctx context.Context, in reflect.Value) (out []interface{}, err error) {
-	if in.Type().Kind() == reflect.Slice && in.IsNil() {
-		return out, nil
-	}
+func marshalList(ctx context.Context, in reflect.Value) ([]interface{}, error) {
+	var out []interface{}
 
-	out = make([]interface{}, in.Len())
 	for i := 0; i < in.Len(); i++ {
 		ctx := ctx.WithIndex(i, in.Type())
 		r, err := marshal(ctx, in.Index(i))
 		if err != nil {
 			return nil, err
 		}
-		out[i] = r
+		out = append(out, r)
 	}
 
 	return out, nil
 }
 
-func marshalMap(ctx context.Context, in reflect.Value) (out map[string]interface{}, err error) {
-	if in.IsNil() {
-		return out, nil
-	}
+func marshalMap(ctx context.Context, in reflect.Value) (map[string]interface{}, error) {
+	out := make(map[string]interface{})
 
-	out = make(map[string]interface{})
 	iter := in.MapRange()
 	for iter.Next() {
 		k := iter.Key()
@@ -145,31 +135,4 @@ func marshalJSONMarshaler(ctx context.Context, in reflect.Value) (interface{}, e
 	}
 
 	return r, nil
-}
-
-func shouldMarshal(p path.Path, v reflect.Value) bool {
-	switch {
-	case p.OmitAlways:
-		return false
-	case v.Type().Implements(reflect.TypeOf((*Omissible)(nil)).Elem()):
-		return !v.MethodByName("OmitJSONry").Call(nil)[0].Bool()
-	case p.OmitEmpty && isEmpty(v):
-		return false
-	default:
-		return true
-	}
-}
-
-func isEmpty(v reflect.Value) bool {
-	k := v.Kind()
-	switch {
-	case k == reflect.Interface, k == reflect.Ptr:
-		return v.IsZero() || v.IsNil()
-	case k == reflect.String, k == reflect.Map, k == reflect.Slice, k == reflect.Array:
-		return v.Len() == 0
-	case basicType(k):
-		return v.IsZero()
-	default:
-		return false
-	}
 }

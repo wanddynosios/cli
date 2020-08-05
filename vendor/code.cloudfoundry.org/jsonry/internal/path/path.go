@@ -5,10 +5,7 @@ import (
 	"strings"
 )
 
-const (
-	omitEmptyToken  string = "omitempty"
-	omitAlwaysToken string = "-"
-)
+const omitEmptyToken string = "omitempty"
 
 type Segment struct {
 	Name string
@@ -16,9 +13,8 @@ type Segment struct {
 }
 
 type Path struct {
-	segments   []Segment
-	OmitEmpty  bool
-	OmitAlways bool
+	segments  []Segment
+	OmitEmpty bool
 }
 
 func (p Path) Len() int {
@@ -48,12 +44,11 @@ func ComputePath(field reflect.StructField) Path {
 	var segments []Segment
 	name := field.Name
 	omitempty := false
-	omitalways := false
 
 	if tag := field.Tag.Get("json"); tag != "" {
-		name, omitempty, omitalways = parseTag(tag, field.Name)
+		name, omitempty = parseTag(tag, field.Name)
 	} else if tag := field.Tag.Get("jsonry"); tag != "" {
-		name, omitempty, omitalways = parseTag(tag, field.Name)
+		name, omitempty = parseTag(tag, field.Name)
 		segments = parseSegments(name)
 	}
 
@@ -65,17 +60,12 @@ func ComputePath(field reflect.StructField) Path {
 	}
 
 	return Path{
-		OmitEmpty:  omitempty,
-		OmitAlways: omitalways,
-		segments:   segments,
+		OmitEmpty: omitempty,
+		segments:  segments,
 	}
 }
 
-func parseTag(tag, defaultName string) (name string, omitempty, omitalways bool) {
-	if tag == omitAlwaysToken {
-		return defaultName, false, true
-	}
-
+func parseTag(tag, defaultName string) (name string, omitempty bool) {
 	parts := strings.Split(tag, ",")
 
 	if len(parts) >= 1 && len(parts[0]) > 0 {

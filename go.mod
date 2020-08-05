@@ -12,7 +12,7 @@ require (
 	code.cloudfoundry.org/go-log-cache v1.0.1-0.20200316170138-f466e0302c34
 	code.cloudfoundry.org/go-loggregator v7.4.0+incompatible
 	code.cloudfoundry.org/gofileutils v0.0.0-20170111115228-4d0c80011a0f
-	code.cloudfoundry.org/jsonry v1.1.0
+	code.cloudfoundry.org/jsonry v1.0.1
 	code.cloudfoundry.org/lager v1.1.1-0.20191008172124-a9afc05ee5be
 	code.cloudfoundry.org/tlsconfig v0.0.0-20200131000646-bbe0f8da39b3
 	code.cloudfoundry.org/ykk v0.0.0-20170424192843-e4df4ce2fd4d
@@ -33,7 +33,10 @@ require (
 	github.com/elazarl/goproxy v0.0.0-20200803153952-ec485169a1eb // indirect
 	github.com/elazarl/goproxy/ext v0.0.0-20200803153952-ec485169a1eb // indirect
 	github.com/fatih/color v1.5.1-0.20170926111411-5df930a27be2
+	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
+	github.com/golang/protobuf v1.3.5 // indirect
+	github.com/google/go-cmp v0.4.0 // indirect
 	github.com/google/go-querystring v0.0.0-20170111101155-53e6ce116135
 	github.com/gorilla/websocket v1.2.1-0.20171201014301-b89020ee79b8 // indirect
 	github.com/jessevdk/go-flags v1.4.1-0.20181221193153-c0795c8afcf4
@@ -45,19 +48,21 @@ require (
 	github.com/mattn/go-runewidth v0.0.5-0.20181218000649-703b5e6b11ae
 	github.com/moby/moby v1.4.2-0.20171120205147-9de84a78d76e
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/onsi/ginkgo v1.13.0
-	github.com/onsi/gomega v1.10.1
+	github.com/onsi/ginkgo v1.12.1
+	github.com/onsi/gomega v1.10.0
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/poy/eachers v0.0.0-20181020210610-23942921fe77 // indirect
 	github.com/sabhiram/go-gitignore v0.0.0-20171017070213-362f9845770f
 	github.com/sajari/fuzzy v1.0.0
+	github.com/sclevine/agouti v3.0.0+incompatible // indirect
 	github.com/sirupsen/logrus v1.2.0
 	github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00 // indirect
 	github.com/tedsuo/rata v1.0.1-0.20170830210128-07d200713958
 	github.com/vito/go-interact v0.0.0-20171111012221-fa338ed9e9ec
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
 	golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7
+	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299 // indirect
 	golang.org/x/text v0.3.3-0.20191230102452-929e72ca90de
 	gopkg.in/cheggaaa/pb.v1 v1.0.27
 	gopkg.in/yaml.v2 v2.3.0
