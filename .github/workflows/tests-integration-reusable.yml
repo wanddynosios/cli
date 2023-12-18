@@ -32,7 +32,7 @@ jobs:
     runs-on: ${{ inputs.os }} 
 
     steps:
-    - uses: LouisBrunner/checks-action@v1.6.0
+    - uses: LouisBrunner/checks-action@v1.6.2
       if: always()
       id: check
       with:
@@ -43,12 +43,12 @@ jobs:
         output: |
           {"title": "${{ inputs.name }}", "summary":"started ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}
     - name: Checkout cli
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{github.event.workflow_run.head_sha}}
 
     - name: Checkout cli-ci
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: cloudfoundry/cli-ci
         path: cli-ci
@@ -56,26 +56,26 @@ jobs:
     - id: read-min-capi
       name: Read MIN CAPI
       run: |
-        version=$(yq '.cf-d-capi-version-min' build_data.yml)
+        version=$(yq '.capi-version-min' build_data.yml)
         echo "version=$version" >> $GITHUB_OUTPUT
 
     - name: Checkout cf-deployment Min CAPI
       if: ${{ inputs.capi-version != 'edge' }}
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: cloudfoundry/cf-deployment
         path: cf-deployment
         ref: ${{ steps.read-min-capi.outputs.version }}
 
     - name: Checkout cf-deployment
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       if: ${{ inputs.capi-version == 'edge' }}
       with:
         repository: cloudfoundry/cf-deployment
         path: cf-deployment
 
     - name: Checkout CF deployment tasks
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: cloudfoundry/cf-deployment-concourse-tasks
         path: cf-deployment-concourse-tasks
@@ -147,8 +147,8 @@ jobs:
         CF_INT_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
       run: |
         # find latest capi
-        FILENAME="$(aws s3 ls capi-releases --no-sign-request --recursive --region us-east-1 | sort | tail -n 1 | awk '{print $4}')"
-        aws s3 cp s3://capi-releases/$FILENAME $FILENAME --no-sign-request --region us-east-1 --no-progress
+        FILENAME="$(aws s3 ls capi-releases-app-runtime-interfaces --no-sign-request --recursive --region us-east-1 | sort | tail -n 1 | awk '{print $4}')"
+        aws s3 cp s3://capi-releases-app-runtime-interfaces/$FILENAME $FILENAME --no-sign-request --region us-east-1 --no-progress
         eval "$(bbl print-env --metadata-file metadata.json)"
         bosh upload-release --sha2 "$FILENAME"
         rm $FILENAME
@@ -156,7 +156,7 @@ jobs:
         # deploy
         bosh -d cf manifest > /tmp/manifest.yml
         bosh interpolate /tmp/manifest.yml \
-          -o cf-deployment/operations/test/add-persistent-isolation-segment-diego-cell.yml \
+          -o cf-deployment/operations/add-persistent-isolation-segment-diego-cell.yml \
           -o cli-ci/ci/infrastructure/operations/add-oidc-provider.yml \
           -o cli-ci/ci/infrastructure/operations/add-uaa-client-credentials.yml \
           -o cli-ci/ci/infrastructure/operations/use-latest-capi.yml \
@@ -185,6 +185,7 @@ jobs:
         cp cli-ci/ci/infrastructure/operations/add-oidc-provider.yml ops-files/
         cp cli-ci/ci/infrastructure/operations/add-uaa-client-credentials.yml ops-files/
         cp cli-ci/ci/infrastructure/operations/diego-cell-instances.yml ops-files/
+        cp cli-ci/ci/infrastructure/operations/use-latest-ruby-buildpack.yml ops-files/
 
         # Deletes CF-D
         eval "$(bbl print-env --metadata-file metadata.json)"
@@ -212,14 +213,16 @@ jobs:
         export BOSH_DEPLOY_ARGS=""
         export BOSH_LITE=false
         export BBL_JSON_CONFIG=""
+        export SKIP_STEMCELL_UPLOAD=false
         export OPS_FILES="add-persistent-isolation-segment-diego-cell.yml \
                           add-uaa-client-credentials.yml \
                           diego-cell-instances.yml \
-                          add-oidc-provider.yml"
+                          add-oidc-provider.yml \
+                          use-latest-ruby-buildpack.yml"
         ./cf-deployment-concourse-tasks/bosh-deploy/task
 
     - name: Set Up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version-file: go.mod
         check-latest: true
@@ -304,7 +307,7 @@ jobs:
           grep -q -E "HTTP/[[:digit:]\.]{1,3} 404" headers.txt && echo $(echo "$output" | jq '.messages | join(", ")') && exit 2
           grep -q -E "HTTP/[[:digit:]\.]{1,3} 202" headers.txt && break
         done
-    - uses: LouisBrunner/checks-action@v1.6.0
+    - uses: LouisBrunner/checks-action@v1.6.2
       if: always()
       with:
         token: ${{ secrets.GITHUB_TOKEN }}

@@ -31,7 +31,7 @@ jobs:
       run: echo "::set-output name=secrets-environment::PROD"
 
     - name: Checkout cli
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set build version
       id: set-build-version
@@ -49,14 +49,14 @@ jobs:
     steps:
 
     - name: Checkout cli-ci
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: cloudfoundry/cli-ci.git
         ref: main
         path: cli-ci
 
     - name: Checkout homebrew-tap
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: cloudfoundry/homebrew-tap
         ref: master
@@ -83,6 +83,12 @@ jobs:
         # Because CLAW always returns 200 we have to check if we got archive
         file cf8-cli-linux-tarball/cf8-cli_${BUILD_VERSION}_linux64.tgz | grep -q gzip || exit 1
 
+        curl -L "https://packages.cloudfoundry.org/stable?release=linuxarm64-binary&version=${BUILD_VERSION}&source=github-rel" \
+          > cf8-cli-linux-tarball/cf8-cli_${BUILD_VERSION}_linuxarm64.tgz
+
+        # Because CLAW always returns 200 we have to check if we got archive
+        file cf8-cli-linux-tarball/cf8-cli_${BUILD_VERSION}_linuxarm64.tgz | grep -q gzip || exit 1
+
         pushd cf8-cli-osx-tarball
           CLI_OSX_SHA256=$(shasum -a 256 cf8-cli_*_osx.tgz | cut -d ' ' -f 1)
         popd
@@ -91,8 +97,13 @@ jobs:
           CLI_LINUX_64_SHA256=$(shasum -a 256 cf8-cli_*_linux64.tgz | cut -d ' ' -f 1)
         popd
 
+        pushd cf8-cli-linux-tarball
+          CLI_LINUX_ARM64_SHA256=$(shasum -a 256 cf8-cli_*_linuxarm64.tgz | cut -d ' ' -f 1)
+        popd
+
         echo "CLI_OSX_SHA256=${CLI_OSX_SHA256}" >> $GITHUB_ENV
         echo "CLI_LINUX_64_SHA256=${CLI_LINUX_64_SHA256}" >> $GITHUB_ENV
+        echo "CLI_LINUX_ARM64_SHA256=${CLI_LINUX_ARM64_SHA256}" >> $GITHUB_ENV
 
     - name: Generate Homebrew formula file
       run: |
@@ -206,9 +217,9 @@ jobs:
         echo "Environment: $ENVIRONMENT"
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: ruby/setup-ruby@v1
       with:
         ruby-version: 2.3
@@ -246,6 +257,7 @@ jobs:
         mkdir installers
         curl -L "https://cli.run.pivotal.io/stable?release=debian32&version=${BUILD_VERSION}&source=github-rel" > installers/cf8-cli-installer_${BUILD_VERSION}_i686.deb
         curl -L "https://cli.run.pivotal.io/stable?release=debian64&version=${BUILD_VERSION}&source=github-rel" > installers/cf8-cli-installer_${BUILD_VERSION}_x86-64.deb
+        curl -L "https://cli.run.pivotal.io/stable?release=debianarm64&version=${BUILD_VERSION}&source=github-rel" > installers/cf8-cli-installer_${BUILD_VERSION}_arm64.deb
 
     - name: Update Debian Repository
       env:
@@ -328,7 +340,7 @@ jobs:
     #     ls -R
     #
     # - name: Backup current Linux RPM repodata
-    #   uses: actions/upload-artifact@v2
+    #   uses: actions/upload-artifact@v4
     #   with:
     #     if-no-files-found: error
     #     name: cf-cli-linux-rpm-repodata-backup
@@ -370,7 +382,7 @@ jobs:
         ls -R
 
     - name: Store Linux RPM repodata
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
         name: cf-cli-linux-rpm-repodata
