@@ -1,4 +1,4 @@
-module code.cloudfoundry.org/cli
+module github.com/wanddynosios/cli/v8
 
 go 1.21
 
